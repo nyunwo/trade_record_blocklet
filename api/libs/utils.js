@@ -8,9 +8,16 @@ const logger = require('../libs/logger');
 exports.fetchPage = async function (url) {
   try {
     const res = await axios.get(url);
-    return res;
+    if(res.status != 200){
+    	throw '请求返回异常：' + res.status
+    }
+    if(!res.data){
+    	throw '无数据返回'
+    }
+    return res.data;
   } catch (e) {
     logger.error(e);
     return null;
   }
 };
+
