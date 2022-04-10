@@ -1,6 +1,10 @@
+const cacheLib = require('cache')
 const logger = require('../libs/logger');
 const utils = require('../libs/utils');
 const tradeRecordService = require('../services/trade-record-service')
+
+// 30秒失效的缓存库
+const cache = new cacheLib(30 * 1000)
 
 /**
  * 获取交易记录
@@ -31,6 +35,19 @@ exports.getTradeRecords = async (req, res) => {
     return res.send({ code: 2, msg: '地址格式错误' });
   }
 
+  // 尝试从缓存拿数据
+  const cacheKey = `${address}-${pageIndex}-${pageSize}`
+  const cacheData = cache.get(cacheKey)
+  if(cacheData) {
+    logger.log('从缓存返回数据')
+    res.send({
+      code: 0,
+      msg: 'OK',
+      data: cacheData
+    })
+    return
+  }
+
   // 抓取数据
   const url = `https://etherscan.io/txs?a=${address}&ps=${pageSize}&p=${pageIndex + 1}`;
   logger.log('抓取数据：', url)
@@ -39,6 +56,7 @@ exports.getTradeRecords = async (req, res) => {
     return res.send({ code: 3, msg: '获取数据失败'})
   }
 
+  
   // 从抓取的数据中分析出实际需要的数据
   let total, list
   try{
@@ -46,16 +64,21 @@ exports.getTradeRecords = async (req, res) => {
   } catch (e) {
     return res.send({ code: 4, msg: e.toString()})
   }
+
+  const dataObj = {
+    pageIndex,
+    pageSize,
+    total,
+    list,
+  }
+
+  // 写入缓存
+  cache.put(cacheKey, dataObj)
   
   res.send({
     code: 0,
     msg: 'OK',
-    data: {
-      pageIndex,
-      pageSize,
-      total,
-      list,
-    },
+    data: dataObj,
   });
 
   
