@@ -1,11 +1,11 @@
 const cheerio = require('cheerio')
 
-exports.analyzePage = async function(pageData){
+exports.analyzePage = async function (pageData) {
 	const $ = cheerio.load(pageData)
 
 	// 获取数据总数
 	const totalText = $('#ContentPlaceHolder1_topPageDiv .d-flex').text()
-	if(!totalText){
+	if (!totalText) {
 		throw '页面数据异常'
 	}
 	const total = Number(/([\d,]+)/.exec(totalText)[0].replace(/,/g, ''))

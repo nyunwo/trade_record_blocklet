@@ -22,7 +22,7 @@ exports.getTradeRecords = async (req, res) => {
   if (pageIndex < 0) {
     pageIndex = 0;
   }
-  if(![10, 25, 50, 100].includes(pageSize)){
+  if (![10, 25, 50, 100].includes(pageSize)) {
     return res.send({ code: 1, msg: 'pageSize只能为10、25、50、100' });
   }
   if (!address) {
@@ -35,7 +35,7 @@ exports.getTradeRecords = async (req, res) => {
   // 尝试从缓存拿数据
   const cacheKey = `${address}-${pageIndex}-${pageSize}`
   const cacheData = cache.get(cacheKey)
-  if(cacheData) {
+  if (cacheData) {
     logger.log('从缓存返回数据')
     res.send({
       code: 0,
@@ -49,17 +49,17 @@ exports.getTradeRecords = async (req, res) => {
   const url = `https://etherscan.io/txs?a=${address}&ps=${pageSize}&p=${pageIndex + 1}`;
   logger.log('抓取数据：', url)
   const pageData = await utils.fetchPage(url);
-  if(!pageData){
-    return res.send({ code: 4, msg: '获取数据失败'})
+  if (!pageData) {
+    return res.send({ code: 4, msg: '获取数据失败' })
   }
 
-  
+
   // 从抓取的数据中分析出实际需要的数据
   let total, list
-  try{
-    ({total, list} = await tradeRecordService.analyzePage(pageData))
+  try {
+    ({ total, list } = await tradeRecordService.analyzePage(pageData))
   } catch (e) {
-    return res.send({ code: 5, msg: e.toString()})
+    return res.send({ code: 5, msg: e.toString() })
   }
 
   const dataObj = {
@@ -71,7 +71,7 @@ exports.getTradeRecords = async (req, res) => {
 
   // 写入缓存
   cache.put(cacheKey, dataObj)
-  
+
   res.send({
     code: 0,
     msg: 'OK',
