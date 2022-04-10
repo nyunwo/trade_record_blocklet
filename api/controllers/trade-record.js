@@ -16,23 +16,20 @@ const cache = new cacheLib(30 * 1000)
 exports.getTradeRecords = async (req, res) => {
   const address = req.query.a;
   let pageIndex = req.query.pageIndex ? Number(req.query.pageIndex) || 0 : 0;
-  let pageSize = req.query.pageSize ? Number(req.query.pageSize) || 50 : 50;
+  let pageSize = req.query.pageSize ? Number(req.query.pageSize) || 25 : 25;
 
   // 参数处理
   if (pageIndex < 0) {
     pageIndex = 0;
   }
-  if (pageSize <= 0) {
-    pageSize = 1;
-  }
-  if (pageSize > 200) {
-    pageSize = 200;
+  if(![10, 25, 50, 100].includes(pageSize)){
+    return res.send({ code: 1, msg: 'pageSize只能为10、25、50、100' });
   }
   if (!address) {
-    return res.send({ code: 1, msg: '缺少地址' });
+    return res.send({ code: 2, msg: '缺少地址' });
   }
   if (!/^0x[0-9a-z]{40}$/.test(address)) {
-    return res.send({ code: 2, msg: '地址格式错误' });
+    return res.send({ code: 3, msg: '地址格式错误' });
   }
 
   // 尝试从缓存拿数据
@@ -53,7 +50,7 @@ exports.getTradeRecords = async (req, res) => {
   logger.log('抓取数据：', url)
   const pageData = await utils.fetchPage(url);
   if(!pageData){
-    return res.send({ code: 3, msg: '获取数据失败'})
+    return res.send({ code: 4, msg: '获取数据失败'})
   }
 
   
@@ -62,7 +59,7 @@ exports.getTradeRecords = async (req, res) => {
   try{
     ({total, list} = await tradeRecordService.analyzePage(pageData))
   } catch (e) {
-    return res.send({ code: 4, msg: e.toString()})
+    return res.send({ code: 5, msg: e.toString()})
   }
 
   const dataObj = {
@@ -81,5 +78,4 @@ exports.getTradeRecords = async (req, res) => {
     data: dataObj,
   });
 
-  
 };

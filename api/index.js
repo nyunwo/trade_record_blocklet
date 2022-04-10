@@ -11,6 +11,7 @@ app.get('/', (req, res) => {
 
 app.get('/api/txs', tradeRecordController.getTradeRecords);
 
-app.listen(port, () => {
+module.exports = app.listen(port, () => {
   console.log(`Blocklet app listening on port ${port}`);
 });
+
